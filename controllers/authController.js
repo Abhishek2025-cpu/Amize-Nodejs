@@ -117,12 +117,13 @@ const verifyEmail = async (req, res) => {
         user.verificationCodeExpiry = undefined;
         await user.save();
         
-        // NOW, send the welcome email!
-        sendWelcomeEmail(user.email, user.firstName).catch(err => {
-             console.error(`Failed to send welcome email post-verification to ${user.email}`, err);
-        });
 
-        res.status(200).json({ success: true, message: 'Email verified successfully! Welcome to Amize.' });
+
+// send the welcome email and WAIT for the result.
+await sendWelcomeEmail(user.email, user.firstName);
+
+// This line will only be reached if the email sends successfully.
+res.status(200).json({ success: true, message: 'Email verified successfully! Welcome to Amize.' });
 
     } catch (error) {
         console.error('--- EMAIL VERIFICATION ERROR ---:', error);
