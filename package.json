@@ -1,0 +1,34 @@
+{
+  "name": "amize-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhishek2025-cpu/Amize-Nodejs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Abhishek2025-cpu/Amize-Nodejs/issues"
+  },
+  "homepage": "https://github.com/Abhishek2025-cpu/Amize-Nodejs#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "expressjs": "^1.0.1",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "mongoose": "^8.17.0",
+    "node-mailer": "^0.1.1",
+    "nodemon": "^3.1.10",
+    "path": "^0.12.7",
+    "zod": "^4.0.14"
+  }
+}
