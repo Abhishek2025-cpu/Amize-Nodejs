@@ -3,27 +3,48 @@
 const bcrypt = require('bcryptjs');
 const { z } = require('zod');
 const User = require('../models/User');
-// ---> IMPORT THE NEW FUNCTIONS
-const { sendVerificationCodeEmail, generateVerificationCode } = require('../services/emailService');
+// ---> IMPORT THE EMAIL SERVICE FUNCTIONS
+const { sendWelcomeEmail, sendVerificationCodeEmail, generateVerificationCode } = require('../services/emailService');
 
-// ... (registerSchema remains the same)
+
+// =========================================================
+//                  CORRECTED SECTION
+// =========================================================
+// Define the Zod validation schema for registration
+const registerSchema = z.object({
+    username: z.string().min(3, "Username must be at least 3 characters.").max(30),
+    email: z.string().email("Invalid email address."),
+    password: z.string().min(8, "Password must be at least 8 characters."),
+    confirmPassword: z.string(),
+    firstName: z.string().min(2, "First name is required."),
+    lastName: z.string().min(2, "Last name is required."),
+    dateOfBirth: z.string().transform((val) => new Date(val)),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"], // Point the error to the confirmPassword field
+});
+// =========================================================
+
 
 const register = async (req, res) => {
     try {
         // 1. Validate incoming data
         const validationResult = registerSchema.safeParse(req.body);
         if (!validationResult.success) {
-            return res.status(400).json({ /* ... error response ... */ });
+            // Send back the validation errors
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed.',
+                errors: validationResult.error.flatten().fieldErrors,
+            });
         }
         
         const { username, email, password, firstName, lastName, dateOfBirth } = validationResult.data;
 
         // 2. Check if user already exists
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
         if (existingUser) {
-            // If the user exists but is not verified, we could re-send the code.
-            // For now, let's keep it simple.
-            const message = existingUser.email === email ? 'An account with this email already exists.' : 'This username is already taken.';
+            const message = existingUser.email === email.toLowerCase() ? 'An account with this email already exists.' : 'This username is already taken.';
             return res.status(409).json({ success: false, message });
         }
 
@@ -42,27 +63,23 @@ const register = async (req, res) => {
             firstName,
             lastName,
             dateOfBirth,
-            verificationCode,         // <-- SAVE THE CODE
-            verificationCodeExpiry,   // <-- SAVE THE EXPIRY
-            isVerified: false,        // <-- START AS NOT VERIFIED
+            verificationCode,
+            verificationCodeExpiry,
+            isVerified: false,
         });
 
         const savedUser = await newUser.save();
 
-        // 6. Send the VERIFICATION email (non-blocking)
+        // 6. Send the VERIFICATION email
         sendVerificationCodeEmail(savedUser.email, savedUser.firstName, savedUser.verificationCode)
             .catch(err => {
-                // This is a critical failure, as the user can't verify.
-                // We should log this seriously.
                 console.error(`FATAL: Failed to send verification email to ${savedUser.email}`, err);
             });
         
         // 7. Respond to the client
         return res.status(201).json({
             success: true,
-            // CHANGE THE MESSAGE!
             message: 'Registration successful! Please check your email for a verification code.',
-            // It's useful to send the email back for the frontend to display.
             data: { email: savedUser.email } 
         });
 
@@ -96,17 +113,14 @@ const verifyEmail = async (req, res) => {
 
         // --- SUCCESS ---
         user.isVerified = true;
-        user.verificationCode = undefined; // Clear the code
-        user.verificationCodeExpiry = undefined; // Clear the expiry
+        user.verificationCode = undefined;
+        user.verificationCodeExpiry = undefined;
         await user.save();
         
         // NOW, send the welcome email!
         sendWelcomeEmail(user.email, user.firstName).catch(err => {
              console.error(`Failed to send welcome email post-verification to ${user.email}`, err);
         });
-
-        // Here you would also generate JWT tokens for auto-login
-        // const token = generateToken(user._id);
 
         res.status(200).json({ success: true, message: 'Email verified successfully! Welcome to Amize.' });
 
@@ -118,5 +132,5 @@ const verifyEmail = async (req, res) => {
 
 module.exports = {
     register,
-    verifyEmail, // <-- ADD THE NEW FUNCTION
+    verifyEmail,
 };
