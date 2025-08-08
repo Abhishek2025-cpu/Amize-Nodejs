@@ -131,7 +131,64 @@ res.status(200).json({ success: true, message: 'Email verified successfully! Wel
     }
 };
 
+
+// This is the login function that goes inside controllers/authController.js
+
+const login = async (req, res) => {
+    try {
+        // 1. Validate input
+        const validationResult = loginSchema.safeParse(req.body);
+        if (!validationResult.success) {
+            return res.status(400).json({
+                success: false,
+                message: "Validation failed.",
+                errors: validationResult.error.flatten().fieldErrors,
+            });
+        }
+
+        const { email, password } = validationResult.data;
+
+        // 2. Find user
+        const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
+
+        // 3. Check if verified
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Account not verified. Please check your email.',
+            });
+        }
+
+        // 4. Compare password
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
+
+        // 5. Return basic user data (no token)
+        res.status(200).json({
+            success: true,
+            message: 'Login successful.',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+            }
+        });
+
+    } catch (error) {
+        console.error('--- LOGIN ERROR ---:', error);
+        res.status(500).json({ success: false, message: 'An internal server error occurred.' });
+    }
+};
+
+
+
 module.exports = {
     register,
     verifyEmail,
+      login, 
 };
