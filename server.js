@@ -42,6 +42,8 @@ app.get('/', (req, res) => {
 
 // All routes in 'authRoutes' will be prefixed with /api/auth
 const authRoutes = require('./routes/auth'); 
+const dashboardRoutes = require('./routes/dashboardRoutes');
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/auth', authRoutes);
 
 
