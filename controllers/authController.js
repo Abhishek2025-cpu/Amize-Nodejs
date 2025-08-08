@@ -136,54 +136,57 @@ res.status(200).json({ success: true, message: 'Email verified successfully! Wel
 
 const login = async (req, res) => {
     try {
-        // 1. Validate input
-        const validationResult = loginSchema.safeParse(req.body);
-        if (!validationResult.success) {
+        console.log("📥 Request body:", req.body);
+
+        const { email, password } = req.body;
+
+        if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Validation failed.",
-                errors: validationResult.error.flatten().fieldErrors,
+                message: "Email and password are required."
             });
         }
 
-        const { email, password } = validationResult.data;
+        console.log("🔍 Searching for user:", email.toLowerCase());
 
-        // 2. Find user
         const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+
+        console.log("👤 User found:", user ? true : false);
+
         if (!user) {
             return res.status(401).json({ success: false, message: 'Invalid credentials.' });
         }
 
-        // 3. Check if verified
-        if (!user.isVerified) {
-            return res.status(403).json({
-                success: false,
-                message: 'Account not verified. Please check your email.',
-            });
-        }
+        console.log("✅ Checking password hash exists:", !!user.passwordHash);
 
-        // 4. Compare password
         const isMatch = await bcrypt.compare(password, user.passwordHash);
+
+        console.log("🔑 Password match:", isMatch);
+
         if (!isMatch) {
             return res.status(401).json({ success: false, message: 'Invalid credentials.' });
         }
 
-        // 5. Return basic user data (no token)
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            message: 'Login successful.',
+            message: "Login successful",
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email,
+                email: user.email
             }
         });
 
     } catch (error) {
-        console.error('--- LOGIN ERROR ---:', error);
-        res.status(500).json({ success: false, message: 'An internal server error occurred.' });
+        console.error("❌ LOGIN ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
     }
 };
+
 
 
 
