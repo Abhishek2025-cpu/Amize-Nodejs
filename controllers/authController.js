@@ -133,17 +133,41 @@ res.status(200).json({ success: true, message: 'Email verified successfully! Wel
 
 
 // This is the login function that goes inside controllers/authController.js
-
 const login = async (req, res) => {
     try {
         console.log("📥 Request body:", req.body);
 
-        const { email, password } = req.body;
+        const { email, password, deviceId, loginSource } = req.body;
 
-        if (!email || !password) {
+        if (!email) {
             return res.status(400).json({
+                statusCode: 400,
                 success: false,
-                message: "Email and password are required."
+                message: "Email is required."
+            });
+        }
+
+        if (!password) {
+            return res.status(400).json({
+                statusCode: 400,
+                success: false,
+                message: "Password is required."
+            });
+        }
+
+        if (!deviceId) {
+            return res.status(400).json({
+                statusCode: 400,
+                success: false,
+                message: "Device ID is required."
+            });
+        }
+
+        if (!loginSource) {
+            return res.status(400).json({
+                statusCode: 400,
+                success: false,
+                message: "Login source is required."
             });
         }
 
@@ -151,41 +175,52 @@ const login = async (req, res) => {
 
         const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
 
-        console.log("👤 User found:", user ? true : false);
+        console.log("👤 User found:", !!user);
 
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+            return res.status(401).json({
+                statusCode: 401,
+                success: false,
+                message: 'Invalid credentials.'
+            });
         }
 
-        console.log("✅ Checking password hash exists:", !!user.passwordHash);
-
         const isMatch = await bcrypt.compare(password, user.passwordHash);
-
         console.log("🔑 Password match:", isMatch);
 
         if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+            return res.status(401).json({
+                statusCode: 401,
+                success: false,
+                message: 'Invalid credentials.'
+            });
         }
 
         return res.status(200).json({
+            statusCode: 200,
             success: true,
             message: "Login successful",
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                isVerified: !!user.emailVerified // ✅ true if email is verified
             }
         });
 
     } catch (error) {
         console.error("❌ LOGIN ERROR:", error);
         return res.status(500).json({
+            statusCode: 500,
             success: false,
             message: "Internal server error",
             error: error.message
         });
     }
 };
+
+
+
 
 
 
