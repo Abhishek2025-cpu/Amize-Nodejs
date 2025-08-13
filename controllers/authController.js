@@ -137,7 +137,7 @@ const login = async (req, res) => {
     try {
         console.log("📥 Request body:", req.body);
 
-        const { email, password, deviceId, loginSource } = req.body;
+        const { email, password, loginSource } = req.body; 
 
         if (!email) {
             return res.status(400).json({
@@ -152,14 +152,6 @@ const login = async (req, res) => {
                 statusCode: 400,
                 success: false,
                 message: "Password is required."
-            });
-        }
-
-        if (!deviceId) {
-            return res.status(400).json({
-                statusCode: 400,
-                success: false,
-                message: "Device ID is required."
             });
         }
 
@@ -204,7 +196,7 @@ const login = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                isVerified: !!user.emailVerified // ✅ true if email is verified
+                isVerified: !!user.emailVerified
             }
         });
 
@@ -218,6 +210,7 @@ const login = async (req, res) => {
         });
     }
 };
+
 
 
 
