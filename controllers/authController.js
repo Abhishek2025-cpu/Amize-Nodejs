@@ -186,7 +186,7 @@ const login = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                isVerified: !!user.email // ✅ true if verified
+                verified: !!user.email // ✅ true if verified
             }
         });
 
