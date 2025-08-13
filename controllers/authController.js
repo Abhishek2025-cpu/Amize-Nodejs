@@ -137,8 +137,9 @@ const login = async (req, res) => {
     try {
         console.log("📥 Request body:", req.body);
 
-        const { email, password, loginSource } = req.body; 
+        const { email, password } = req.body;
 
+        // Basic required field checks
         if (!email) {
             return res.status(400).json({
                 statusCode: 400,
@@ -155,19 +156,9 @@ const login = async (req, res) => {
             });
         }
 
-        if (!loginSource) {
-            return res.status(400).json({
-                statusCode: 400,
-                success: false,
-                message: "Login source is required."
-            });
-        }
-
         console.log("🔍 Searching for user:", email.toLowerCase());
 
         const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
-
-        console.log("👤 User found:", !!user);
 
         if (!user) {
             return res.status(401).json({
@@ -178,7 +169,6 @@ const login = async (req, res) => {
         }
 
         const isMatch = await bcrypt.compare(password, user.passwordHash);
-        console.log("🔑 Password match:", isMatch);
 
         if (!isMatch) {
             return res.status(401).json({
@@ -196,7 +186,7 @@ const login = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                isVerified: !!user.emailVerified
+                isVerified: !!user.email // ✅ true if verified
             }
         });
 
@@ -210,6 +200,7 @@ const login = async (req, res) => {
         });
     }
 };
+
 
 
 
