@@ -42,13 +42,14 @@ exports.createProfile = async (req, res) => {
   }
 };
 
-// Get Profile by ID
+
+// Get Profile by User ID
 exports.getProfileById = async (req, res) => {
   try {
-    const profile = await UserProfile.findById(req.params.id)
+    const profile = await UserProfile.findOne({ userId: req.params.id })
       .populate('userId', 'username email')
       .populate('interests');
-      
+
     if (!profile) {
       return res.status(404).json({ success: false, message: 'Profile not found' });
     }
@@ -58,3 +59,4 @@ exports.getProfileById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
