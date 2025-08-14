@@ -22,7 +22,7 @@ const UserProfileSchema = new mongoose.Schema({
   bannerImage: { type: String },
 
   // Relationships
-  interests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interest' }],
+interests: [String], 
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Follow' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Follow' }],
   videos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Video' }],
