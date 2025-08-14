@@ -73,11 +73,19 @@ exports.getProfileById = async (req, res) => {
     const authUser = req.user;
     const profileOwnerId = req.params.id;
 
+    // Fetch the profile and populate username/email
     const profile = await UserProfile.findOne({ userId: profileOwnerId })
       .populate('userId', 'username email');
 
     if (!profile) {
       return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
+
+    // Manually merge _count into userId object
+    const profileObj = profile.toObject();
+    if (profileObj.userId) {
+      profileObj.userId._count = profileObj._count; // move _count inside userId
+      delete profileObj._count; // remove from root if not needed
     }
 
     let isFollowing = false;
@@ -93,7 +101,7 @@ exports.getProfileById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      user: profile,
+      user: profileObj,
       isOwnProfile,
       isFollowing
     });
@@ -102,6 +110,7 @@ exports.getProfileById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 
