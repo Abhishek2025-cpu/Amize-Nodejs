@@ -17,19 +17,22 @@ const UserProfileSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
   pin: { type: String },
 
-  // Media fields stored in Cloudinary
+  // Media fields
   profileImage: { type: String },
   bannerImage: { type: String },
 
-  // Relationships
-interests: [String], 
-  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Follow' }],
-  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Follow' }],
-  videos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Video' }],
+  // Interests stored as strings
+  interests: [String],
+
+  // Count fields instead of storing arrays
+  _count: {
+    followers: { type: Number, default: 0 },
+    following: { type: Number, default: 0 },
+    videos: { type: Number, default: 0 }
+  },
 
   isOnline: { type: Boolean, default: false },
   lastSeenAt: { type: Date },
-
   isEligibleForCreator: { type: Boolean, default: false },
 
   createdAt: { type: Date, default: Date.now },

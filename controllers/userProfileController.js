@@ -18,8 +18,8 @@ const uploadToCloudinary = async (fileBuffer, folder) => {
 // Create Profile
 exports.createProfile = async (req, res) => {
   try {
-    const authUser = req.user; // assuming you have authentication middleware
-    const id = req.body.userId; // the owner of the profile being created
+    const authUser = req.user;
+    const id = req.body.userId;
 
     let profileImageUrl = null;
     let bannerImageUrl = null;
@@ -35,12 +35,12 @@ exports.createProfile = async (req, res) => {
     const profile = new UserProfile({
       ...req.body,
       profileImage: profileImageUrl,
-      bannerImage: bannerImageUrl
+      bannerImage: bannerImageUrl,
+      _count: { followers: 0, following: 0, videos: 0 }
     });
 
     await profile.save();
 
-    // Check if following
     let isFollowing = false;
     if (authUser) {
       const followRecord = await Follow.findOne({
@@ -50,7 +50,6 @@ exports.createProfile = async (req, res) => {
       isFollowing = !!followRecord;
     }
 
-    // Check if viewing own profile
     const isOwnProfile = authUser?.userId?.toString() === id?.toString();
 
     res.status(201).json({
@@ -67,11 +66,12 @@ exports.createProfile = async (req, res) => {
 
 
 
+
 // Get Profile by User ID
 exports.getProfileById = async (req, res) => {
   try {
-    const authUser = req.user; // comes from authentication middleware
-    const profileOwnerId = req.params.id; // userId of the profile owner
+    const authUser = req.user;
+    const profileOwnerId = req.params.id;
 
     const profile = await UserProfile.findOne({ userId: profileOwnerId })
       .populate('userId', 'username email');
@@ -80,7 +80,6 @@ exports.getProfileById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Profile not found' });
     }
 
-    // Check if following
     let isFollowing = false;
     if (authUser) {
       const followRecord = await Follow.findOne({
@@ -90,7 +89,6 @@ exports.getProfileById = async (req, res) => {
       isFollowing = !!followRecord;
     }
 
-    // Check if viewing own profile
     const isOwnProfile = authUser?.userId?.toString() === profileOwnerId?.toString();
 
     res.status(200).json({
@@ -104,5 +102,6 @@ exports.getProfileById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
